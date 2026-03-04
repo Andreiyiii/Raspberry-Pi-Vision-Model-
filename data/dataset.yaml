@@ -1,7 +1,7 @@
 train: ../data/images/train
 val: ../data/images/val
 
-nc: 7
+nc: 5
 
 names: 
   0: traffic_light_red
