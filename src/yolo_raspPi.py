@@ -10,7 +10,6 @@ cam = cv2.VideoCapture(0)
 
 #last state of classes to compare and not spam user with information
 ultimul_semafor_vazut = None
-ultima_stare_trecere = False
 ultima_banca_vazuta = False
 ultimul_gunoi_vazut = False
 ultimul_obstacol_vazut = False
@@ -26,7 +25,6 @@ while True:
     
     #current state of classes
     semafor_in_cadrul_curent = None
-    trecere_in_cadrul_curent = False
     banca_in_cadrul_curent = False
     gunoi_in_cadrul_curent = False
     obstacol_in_cadrul_curent = False
@@ -36,29 +34,20 @@ while True:
         for box in boxes:
             cls = int(box.cls[0])
             
-            if cls == 0: #crosswalk
-                trecere_in_cadrul_curent = True
-            elif cls == 1: 
+            if cls == 0: 
                 semafor_in_cadrul_curent = "ROSU"
-            elif cls == 2: 
+            elif cls == 1: 
                 semafor_in_cadrul_curent = "VERDE"
-            elif cls == 4: # bench 
+            elif cls == 2: # bench 
                 banca_in_cadrul_curent = True
-            elif cls == 5: # trashcan 
+            elif cls == 3: # trashcan 
                 gunoi_in_cadrul_curent = True
-            elif cls == 6: # scooter 
+            elif cls == 4: # scooter 
                 obstacol_in_cadrul_curent = True
 
         frame = r.plot()  
 
     # notify user logic
-    
-    if trecere_in_cadrul_curent != ultima_stare_trecere:
-        if trecere_in_cadrul_curent == True:
-            print("Trecere de pietoni detectata in fata.")
-
-        ultima_stare_trecere = trecere_in_cadrul_curent
-
     
     if semafor_in_cadrul_curent != ultimul_semafor_vazut:
         if semafor_in_cadrul_curent == "ROSU":
