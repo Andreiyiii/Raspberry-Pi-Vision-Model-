@@ -6,7 +6,6 @@ script_dir = Path(__file__).parent
 model_path = script_dir.parent / "models" / "task_ncnn_model"
 #task='detect' cause it is a NCNN model 
 model = YOLO(model_path, task='detect') 
-
 cam = cv2.VideoCapture(0)
 
 #last state of classes to compare and not spam user with information
@@ -19,7 +18,7 @@ ultimul_obstacol_vazut = False
 while True:
     ret, frame = cam.read()
     if not ret:
-        print("Eroare la citirea camerei")
+        print("Camera not working")
         break
     
     # stream=True for better ram usage
@@ -53,6 +52,43 @@ while True:
         frame = r.plot()  
 
     # notify user logic
+    
+    if trecere_in_cadrul_curent != ultima_stare_trecere:
+        if trecere_in_cadrul_curent == True:
+            print("Trecere de pietoni detectata in fata.")
+
+        ultima_stare_trecere = trecere_in_cadrul_curent
+
+    
+    if semafor_in_cadrul_curent != ultimul_semafor_vazut:
+        if semafor_in_cadrul_curent == "ROSU":
+            print("Semafor Rosu! Opreste-te.")
+        elif semafor_in_cadrul_curent == "VERDE":
+            print("Semafor Verde! Poti trece.")
+
+        ultimul_semafor_vazut = semafor_in_cadrul_curent
+
+
+    if banca_in_cadrul_curent != ultima_banca_vazuta:
+        if banca_in_cadrul_curent == True:
+            print("Bancă în apropiere. Te poți așeza dacă dorești.")
+            
+        ultima_banca_vazuta = banca_in_cadrul_curent
+
+
+    if gunoi_in_cadrul_curent != ultimul_gunoi_vazut:
+        if gunoi_in_cadrul_curent == True:
+            print("Coș de gunoi în apropiere.")
+
+        ultimul_gunoi_vazut = gunoi_in_cadrul_curent
+
+
+    if obstacol_in_cadrul_curent != ultimul_obstacol_vazut:
+        if obstacol_in_cadrul_curent == True:
+            print("Atenție! Obstacol pe traseu.")
+            
+        ultimul_obstacol_vazut = obstacol_in_cadrul_curent
+
 
 
     cv2.imshow('Raspberry Pi Vision', frame)
