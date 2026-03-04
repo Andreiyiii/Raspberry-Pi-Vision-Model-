@@ -1,0 +1,18 @@
+from ultralytics import YOLO
+
+model = YOLO('yolov8n.pt') 
+
+results = model.train(
+    data='dataset.yaml', 
+    epochs=100,        
+    imgsz=640,         
+    degrees=15.0,      
+    mosaic=1.0,        
+    mixup=0.2,         
+    hsv_s=0.5,         
+    fliplr=0.5         
+)
+
+
+best_model = YOLO('runs/detect/train/weights/task.pt')
+best_model.export(format='ncnn')
