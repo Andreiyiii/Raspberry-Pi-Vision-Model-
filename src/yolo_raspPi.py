@@ -1,7 +1,7 @@
 import cv2
 from ultralytics import YOLO
-from pathlib import Path
-from picamera2 import Picamera2 
+from pathlib import Path  
+from picamera2 import Picamera2  # type: ignore + changes in venv/pyvenv.cfg  include-system-site-packages = true
 
 script_dir = Path(__file__).parent
 model_path = script_dir.parent / "models" / "best_ncnn_model"
