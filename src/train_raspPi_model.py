@@ -1,9 +1,10 @@
 from ultralytics import YOLO
 
-model = YOLO('yolov8n.pt') 
+model = YOLO('models/yolov8n.pt') 
+
 
 results = model.train(
-    data='dataset.yaml', 
+    data='data/data.yaml', 
     epochs=100,        
     imgsz=640,         
     degrees=15.0,      
@@ -12,7 +13,5 @@ results = model.train(
     hsv_s=0.5,         
     fliplr=0.5         
 )
-
-
-best_model = YOLO('runs/detect/train/weights/task.pt')
+best_model = YOLO('runs/detect/train/weights/best.pt')
 best_model.export(format='ncnn')

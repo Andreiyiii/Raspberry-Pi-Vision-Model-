@@ -3,7 +3,7 @@ from ultralytics import YOLO
 from pathlib import Path
 
 script_dir = Path(__file__).parent
-model_path = script_dir.parent / "models" / "task_ncnn_model"
+model_path = script_dir.parent / "models" / "best_ncnn_model"
 #task='detect' cause it is a NCNN model 
 model = YOLO(model_path, task='detect') 
 cam = cv2.VideoCapture(0)
