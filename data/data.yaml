@@ -2,12 +2,12 @@ train: ../train/images
 val: ../valid/images
 test: ../test/images
 
-nc: 3
-names: ['bench', 'electric scooter', 'trashcan']
+nc: 5
+names: ['bench', 'concrete_post', 'electric scooter', 'plastic_post', 'trashcan']
 
 roboflow:
   workspace: tavis-workspace
-  project: my-first-project-rwzng
-  version: 2
+  project: rasp-pi-blind-vision
+  version: 3
   license: CC BY 4.0
-  url: https://universe.roboflow.com/tavis-workspace/my-first-project-rwzng/dataset/2
+  url: https://universe.roboflow.com/tavis-workspace/rasp-pi-blind-vision/dataset/3

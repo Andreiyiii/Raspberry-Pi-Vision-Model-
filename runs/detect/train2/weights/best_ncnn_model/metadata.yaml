@@ -1,0 +1,23 @@
+description: Ultralytics best model trained on data/data.yaml
+author: Ultralytics
+date: '2026-03-10T02:58:46.456096'
+version: 8.4.19
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 512
+- 512
+names:
+  0: bench
+  1: concrete_post
+  2: electric scooter
+  3: plastic_post
+  4: trashcan
+args:
+  batch: 1
+  half: false
+channels: 3
+end2end: false
