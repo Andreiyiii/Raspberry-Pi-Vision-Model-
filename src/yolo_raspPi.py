@@ -30,10 +30,11 @@ ultima_banca_vazuta = False
 ultimul_gunoi_vazut = False
 ultimul_stalp_vazut = False
 ultima_trotineta_vazuta = False
+ultimul_om_vazut = False
 
 while True:
     frame = picam2.capture_array()
-    # Camera trimite culorile in format RGB, le intoarcem in BGR pentru YOLO
+    # camera sends RGB, we switch to BGR for YOLO
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     
     # stream=True for better ram usage
@@ -43,6 +44,7 @@ while True:
     stalp_in_cadrul_curent = False
     trotineta_in_cadrul_curent = False
     gunoi_in_cadrul_curent = False
+    om_in_cadrul_curent = False
     
     for r in results: 
         boxes = r.boxes
@@ -57,6 +59,8 @@ while True:
                 trotineta_in_cadrul_curent = True
             elif cls == 4: # trashcan
                 gunoi_in_cadrul_curent = True
+            elif cls ==5:
+                om_in_cadrul_curent = True
 
         frame = r.plot()  
 
@@ -64,6 +68,7 @@ while True:
     ultimul_stalp_vazut = notify(stalp_in_cadrul_curent, ultimul_stalp_vazut, "stalp")
     ultima_trotineta_vazuta = notify(trotineta_in_cadrul_curent, ultima_trotineta_vazuta, "trotineta")
     ultimul_gunoi_vazut = notify(gunoi_in_cadrul_curent, ultimul_gunoi_vazut, "cos de gunoi")
+    ultimul_om_vazut = notify(om_in_cadrul_curent, ultimul_om_vazut, "om")
 
     cv2.imshow('Raspberry Pi Vision', frame)
 
