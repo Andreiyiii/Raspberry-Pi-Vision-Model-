@@ -1,17 +1,10 @@
 import cv2
 from ultralytics import YOLO
 from pathlib import Path  
+from analyze import analizeaza
+from voice import talk
 from picamera2 import Picamera2 #type: ignore 
                                 #+ changes in venv/pyvenv.cfg  include-system-site-packages = true
-
-
-def notify(stare_curenta, stare_anterioara, mesaj):
-    if stare_curenta != stare_anterioara:
-        if stare_curenta == True:
-            print(mesaj)
-    
-    return stare_curenta
-
 
 
 script_dir = Path(__file__).parent
@@ -26,11 +19,8 @@ picam2.start()
 
 print("Camera Pi 5 a pornit cu succes!")
 
-ultima_banca_vazuta = False
-ultimul_gunoi_vazut = False
-ultimul_stalp_vazut = False
-ultima_trotineta_vazuta = False
-ultimul_om_vazut = False
+obiecte_anterioare = set()
+
 
 while True:
     frame = picam2.capture_array()
@@ -40,35 +30,19 @@ while True:
     # stream=True for better ram usage
     results = model(frame, stream=True)
     
-    banca_in_cadrul_curent = False
-    stalp_in_cadrul_curent = False
-    trotineta_in_cadrul_curent = False
-    gunoi_in_cadrul_curent = False
-    om_in_cadrul_curent = False
-    
-    for r in results: 
-        boxes = r.boxes
-        for box in boxes:
-            cls = int(box.cls[0])
+    for r in results:
+        rezultate = analizeaza(r.boxes)
+
+        obiecte_curente = set()
+        for cheie, prioritate in rezultate:
+            obiecte_curente.add(cheie)
             
-            if cls == 0: # bench
-                banca_in_cadrul_curent = True
-            elif cls in [1, 3]: # concrete_post sau plastic_post 
-                stalp_in_cadrul_curent = True
-            elif cls == 2: # electric scooter
-                trotineta_in_cadrul_curent = True
-            elif cls == 4: # trashcan
-                gunoi_in_cadrul_curent = True
-            elif cls ==5:
-                om_in_cadrul_curent = True
-
+            if cheie not in obiecte_anterioare:
+                talk(cheie)
+                break
+        
+        obiecte_anterioare = obiecte_curente
         frame = r.plot()  
-
-    ultima_banca_vazuta = notify(banca_in_cadrul_curent, ultima_banca_vazuta, "banca")
-    ultimul_stalp_vazut = notify(stalp_in_cadrul_curent, ultimul_stalp_vazut, "stalp")
-    ultima_trotineta_vazuta = notify(trotineta_in_cadrul_curent, ultima_trotineta_vazuta, "trotineta")
-    ultimul_gunoi_vazut = notify(gunoi_in_cadrul_curent, ultimul_gunoi_vazut, "cos de gunoi")
-    ultimul_om_vazut = notify(om_in_cadrul_curent, ultimul_om_vazut, "om")
 
     cv2.imshow('Raspberry Pi Vision', frame)
 

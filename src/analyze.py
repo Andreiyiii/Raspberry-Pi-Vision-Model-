@@ -45,7 +45,7 @@ def get_cel_mai_apropiat_om(oameni_boxes):
     
     return cel_mai_apropiat
 
-def analizeaza_boxes(boxes):
+def analizeaza(boxes):
     rezultate = []
     numar_oameni = 0
     oameni_boxes = []
