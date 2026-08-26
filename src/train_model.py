@@ -13,5 +13,10 @@ results = model.train(
     hsv_s=0.5,         
     fliplr=0.5         
 )
-best_model = YOLO('runs/detect/train2/weights/best.pt')
+# results.save_dir e folderul in care a salvat chiar acum (train, train2, train3...)
+# asa nu mai trebuie sa scriem noi numele folderului de mana
+best_path = str(results.save_dir) + "/weights/best.pt"
+print("Modelul bun este la:", best_path)
+
+best_model = YOLO(best_path)
 best_model.export(format='ncnn', imgsz=512)
