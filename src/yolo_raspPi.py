@@ -6,6 +6,7 @@ from pathlib import Path
 from analyze import analizeaza
 from voice import talk
 from picamera2 import Picamera2 #type: ignore 
+from libcamera import controls  #type: ignore
                                 #+ changes in venv/pyvenv.cfg  include-system-site-packages = true
 
 
@@ -14,14 +15,19 @@ model_path = script_dir.parent / "models" / "best_ncnn_model"
 model = YOLO(model_path, task='detect')
 
 # connecting to native rasppi camera since opencv didnt work
+# Camera Module 3 Wide (IMX708, 16:9, ~120°) - folosim 16:9 ca sa nu pierdem din unghi
 picam2 = Picamera2()
-config = picam2.create_video_configuration(main={"size": (640, 480)})
+config = picam2.create_video_configuration(
+    main={"size": (640, 360), "format": "RGB888"},  # RGB888 in picamera2 = BGR in memorie, direct pt OpenCV
+    sensor={"output_size": (2304, 1296)},           # mod binned cu tot campul vizual
+)
 picam2.configure(config)
+picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})  # autofocus continuu
 picam2.start()
 
 print("Camera Pi 5 a pornit cu succes!")
 
-obiecte_anterioare = set()
+anuntate = set()     # obiectele deja anuntate care inca sunt in fata camerei
 
 # ca sa nu vorbeasca prea des
 PAUZA = 2.0          # secunde de asteptare intre doua anunturi
@@ -38,31 +44,37 @@ def vorbeste(cheie):
 
 
 while True:
-    frame = picam2.capture_array()
-    # camera sends RGB, we switch to BGR for YOLO
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    frame = picam2.capture_array()  # deja BGR (format RGB888)
     
     # conf=0.5 ca sa ignore detectiile nesigure, verbose=False ca sa nu scrie in consola
-    results = model.predict(frame, conf=0.5, verbose=False)
+    # imgsz=512 = marimea la care a fost exportat modelul
+    results = model.predict(frame, imgsz=512, conf=0.5, verbose=False)
 
     for r in results:
-        rezultate = analizeaza(r.boxes)
+        rezultate = analizeaza(r.boxes, r.names)
 
         # mai intai punem TOATE obiectele in set
         obiecte_curente = set()
         for cheie, prioritate in rezultate:
             obiecte_curente.add(cheie)
 
-        # abia apoi vorbim, ca sa nu repete la infinit
-        for cheie, prioritate in rezultate:
-            if cheie not in obiecte_anterioare:
-                # vorbim doar daca nu vorbeste deja si a trecut PAUZA
-                if not vorbeste_acum and time.time() - ultimul_anunt > PAUZA:
+        # uitam obiectele care au disparut, ca sa fie anuntate din nou daca revin
+        ramase = set()
+        for cheie in anuntate:
+            if cheie in obiecte_curente:
+                ramase.add(cheie)
+        anuntate = ramase
+
+        # anuntam primul obiect (cel mai periculos) care n-a fost anuntat inca
+        # il trecem la "anuntate" DOAR cand chiar vorbim, ca sa nu se piarda in pauza
+        if not vorbeste_acum and time.time() - ultimul_anunt > PAUZA:
+            for cheie, prioritate in rezultate:
+                if cheie not in anuntate:
                     threading.Thread(target=vorbeste, args=(cheie,)).start()
                     ultimul_anunt = time.time()
-                break
+                    anuntate.add(cheie)
+                    break
 
-        obiecte_anterioare = obiecte_curente
         frame = r.plot()
 
     cv2.imshow('Raspberry Pi Vision', frame)
