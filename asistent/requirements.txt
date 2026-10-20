@@ -1,0 +1,7 @@
+anthropic
+SpeechRecognition
+pyaudio
+requests
+pyttsx3
+opencv-python
+# pe Raspberry Pi (vin deja cu sistemul): gpiozero, picamera2
