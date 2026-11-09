@@ -1,4 +1,5 @@
 import cv2
+import sys
 import time
 import threading
 from ultralytics import YOLO
@@ -8,9 +9,17 @@ from voice import talk
 from picamera2 import Picamera2 #type: ignore 
 from libcamera import controls  #type: ignore
                                 #+ changes in venv/pyvenv.cfg  include-system-site-packages = true
+from gpiozero import Button     #type: ignore
 
 
 script_dir = Path(__file__).parent
+
+# asistentul vocal e in folderul asistent/, il adaugam ca sa-l putem importa
+sys.path.append(str(script_dir.parent / "asistent"))
+from main import intreaba_asistentul
+from config import PIN_BUTON, CALE_POZA   # din asistent/config.py
+
+buton = Button(PIN_BUTON)
 model_path = script_dir.parent / "models" / "best_ncnn_model"
 model = YOLO(model_path, task='detect')
 
@@ -33,6 +42,7 @@ anuntate = set()     # obiectele deja anuntate care inca sunt in fata camerei
 PAUZA = 2.0          # secunde de asteptare intre doua anunturi
 ultimul_anunt = 0    # cand am vorbit ultima data
 vorbeste_acum = False
+asistent_activ = False   # True cat timp persoana vorbeste cu asistentul
 
 
 def vorbeste(cheie):
@@ -43,8 +53,21 @@ def vorbeste(cheie):
     vorbeste_acum = False
 
 
+def porneste_asistentul(poza):
+    # rulam asistentul intr-un thread ca detectia sa mearga mai departe
+    global asistent_activ
+    cv2.imwrite(CALE_POZA, poza)
+    intreaba_asistentul()
+    asistent_activ = False
+
+
 while True:
     frame = picam2.capture_array()  # deja BGR (format RGB888)
+
+    # butonul apasat -> trimitem poza curenta la asistent (camera e deja pornita aici)
+    if buton.is_pressed and not asistent_activ:
+        asistent_activ = True   # il punem aici, ca sa nu porneasca de 2 ori daca butonul e tinut apasat
+        threading.Thread(target=porneste_asistentul, args=(frame.copy(),)).start()
     
     # conf=0.5 ca sa ignore detectiile nesigure, verbose=False ca sa nu scrie in consola
     # imgsz=512 = marimea la care a fost exportat modelul
@@ -67,7 +90,8 @@ while True:
 
         # anuntam primul obiect (cel mai periculos) care n-a fost anuntat inca
         # il trecem la "anuntate" DOAR cand chiar vorbim, ca sa nu se piarda in pauza
-        if not vorbeste_acum and time.time() - ultimul_anunt > PAUZA:
+        # nu anuntam obstacole cat timp vorbeste asistentul, ca sa nu se suprapuna vocile
+        if not vorbeste_acum and not asistent_activ and time.time() - ultimul_anunt > PAUZA:
             for cheie, prioritate in rezultate:
                 if cheie not in anuntate:
                     threading.Thread(target=vorbeste, args=(cheie,)).start()
