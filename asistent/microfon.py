@@ -18,3 +18,6 @@ def asculta():
         return r.recognize_google(audio, language=config.LIMBA)
     except sr.UnknownValueError:
         return ""   # n-a inteles ce s-a spus
+    except sr.RequestError as e:
+        print("Eroare Google speech:", e)
+        return ""   # nu merge internetul

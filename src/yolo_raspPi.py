@@ -20,6 +20,17 @@ from main import intreaba_asistentul
 from config import PIN_BUTON, CALE_POZA   # din asistent/config.py
 
 buton = Button(PIN_BUTON)
+buton_apasat = False
+
+
+def la_apasare():
+    # gpiozero apeleaza functia asta singur cand se apasa butonul,
+    # asa nu pierdem o apasare scurta intre doua frame-uri
+    global buton_apasat
+    buton_apasat = True
+
+
+buton.when_pressed = la_apasare
 model_path = script_dir.parent / "models" / "best_ncnn_model"
 model = YOLO(model_path, task='detect')
 
@@ -56,8 +67,18 @@ def vorbeste(cheie):
 def porneste_asistentul(poza):
     # rulam asistentul intr-un thread ca detectia sa mearga mai departe
     global asistent_activ
-    cv2.imwrite(CALE_POZA, poza)
-    intreaba_asistentul()
+
+    # asteptam sa termine anuntul de obstacol, ca sa nu vorbeasca amandoua deodata
+    while vorbeste_acum:
+        time.sleep(0.1)
+
+    try:
+        cv2.imwrite(CALE_POZA, poza)
+        intreaba_asistentul()
+    except Exception as e:
+        print("Eroare asistent:", e)
+
+    # orice s-ar intampla, pornim inapoi anunturile de obstacole
     asistent_activ = False
 
 
@@ -65,7 +86,8 @@ while True:
     frame = picam2.capture_array()  # deja BGR (format RGB888)
 
     # butonul apasat -> trimitem poza curenta la asistent (camera e deja pornita aici)
-    if buton.is_pressed and not asistent_activ:
+    if buton_apasat and not asistent_activ:
+        buton_apasat = False
         asistent_activ = True   # il punem aici, ca sa nu porneasca de 2 ori daca butonul e tinut apasat
         threading.Thread(target=porneste_asistentul, args=(frame.copy(),)).start()
     
